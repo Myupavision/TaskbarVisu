@@ -374,7 +374,8 @@ internal sealed class SpectrumModule : VisualizerModule
                 canvas.DrawRect(x0 + s - p, y0, p, s, _bar);
             }
         }
-        _note.Draw(canvas, ctx, text, box.Left, box.Top, t.Ink, t.OverlayBack, 2 * p, p);
+        // Case de lecture aux couleurs de la palette, comme celle des niveaux.
+        _note.Draw(canvas, ctx, text, box.Left, box.Top, t.ReadoutText, t.ReadoutBack, 2 * p, p);
     }
 
     /// <summary>Grille des fréquences (calque en cache) et ses étiquettes, sauf celles que cache la lecture du pic.</summary>

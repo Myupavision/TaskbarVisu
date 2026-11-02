@@ -183,6 +183,9 @@ internal sealed class TunerModule : VisualizerModule
             _noteText = active ? Harmony.NoteName(_pc, Latin) + _octave.ToString(CultureInfo.InvariantCulture) : "--";
         }
         string note = _noteText;
+        // Couleurs de la palette : de plus en plus vive à l'approche de la justesse, la plus haute une fois juste.
+        float closeness = 1 - (float)Math.Min(Math.Abs(_cents), 50) / 50;
+        var tuneColor = inTune ? t.Spectral(1f) : t.Spectral(0.3f + 0.45f * closeness);
 
         // Note en grand, à gauche.
         int factor = rect.Height >= 24 * p ? 2 : 1;
@@ -192,7 +195,7 @@ internal sealed class TunerModule : VisualizerModule
         bool alone = Flag("noteOnly");
         float noteX = MathF.Round(alone ? rect.MidX - size.Width / 2 : rect.Left + inset);
         _big.Draw(canvas, ctx, note, noteX, MathF.Round(rect.MidY - size.Height / 2),
-            inTune ? t.Spectral(1f) : active ? t.Ink : t.InkDim, factor: factor);
+            active ? tuneColor : t.InkDim, factor: factor);
         if (alone) return;
 
         // Jauge de justesse à droite.
@@ -222,7 +225,7 @@ internal sealed class TunerModule : VisualizerModule
         float pos = (float)Math.Clamp((_cents + 50) / 100, 0, 1) * (Ticks - 1);
         int idx = (int)MathF.Round(pos);
         int center = Ticks / 2;
-        var color = inTune ? t.Spectral(1f) : Math.Abs(_cents) > 25 ? t.Hot : t.Warn;
+        var color = tuneColor;
         for (int i = Math.Min(idx, center); i <= Math.Max(idx, center); i++)
         {
             _fill.Color = color.WithAlpha(i == idx ? (byte)255 : (byte)0x50);
@@ -246,7 +249,7 @@ internal sealed class TunerModule : VisualizerModule
             _centsText = centsKey.ToString("+0;-0;0", ci) + "C";
         }
         _left.Draw(canvas, ctx, _freqText, gx0, rect.Top + p, t.InkDim);
-        _right.Draw(canvas, ctx, _centsText, gx1 - ctx.Labels.Measure(_centsText), rect.Top + p, inTune ? t.Spectral(1f) : t.Ink);
+        _right.Draw(canvas, ctx, _centsText, gx1 - ctx.Labels.Measure(_centsText), rect.Top + p, tuneColor);
     }
 
     // ------------------------------------------------------------------ Mode tonalité
