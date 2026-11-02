@@ -1,5 +1,7 @@
 using SkiaSharp;
+using TaskbarVisu.Audio;
 using TaskbarVisu.Core;
+using TaskbarVisu.Dsp;
 using TaskbarVisu.Modules;
 
 namespace TaskbarVisu.Rendering;
@@ -38,9 +40,24 @@ internal sealed partial class RenderHost
     private int _previewHeight;
     private bool _previewSettingsDirty;
 
-    /// <summary>Aperçus voulus par l'interface (vide ou null : aucun).</summary>
-    public void SetPreviews((string Id, int WidthDip)[]? modules) =>
+    /// <summary>Modules qui ne montrent rien d'intéressant sur un son mono : la galerie leur donne une démo stéréo.</summary>
+    private static readonly HashSet<string> StereoModules = new() { "imager", "xyscope" };
+
+    private volatile bool _demoAllowed;
+    private StereoDemo? _demo;
+    private AudioAnalyzer? _demoAnalyzer;
+    private bool _demoOn;
+    private double _sideRatio, _demoHold;
+
+    /// <summary>
+    /// Aperçus voulus par l'interface (vide ou null : aucun). <paramref name="demo"/> : si le son du moment est
+    /// mono ou muet, les modules stéréo tournent sur une démo stéréo (galerie seulement, pas « votre barre »).
+    /// </summary>
+    public void SetPreviews((string Id, int WidthDip)[]? modules, bool demo = false)
+    {
+        _demoAllowed = demo;
         _previewRequest = modules is { Length: > 0 } ? modules : null;
+    }
 
     /// <summary>Image d'aperçu d'un module, si elle existe (thread de l'interface).</summary>
     public PreviewFrame? GetPreview(string id) => _previewFrames.TryGetValue(id, out var frame) ? frame : null;
@@ -96,10 +113,11 @@ internal sealed partial class RenderHost
     /// <summary>Fait avancer les aperçus à chaque image, et les dessine à ~20 images par seconde.</summary>
     private void UpdatePreviews(double dt, double now)
     {
+        UpdateStereoDemo(dt);
         foreach (var slot in _previews.Values)
         {
             _ctx.Theme = ThemeFor(slot.Module);
-            slot.Module.Update(_analyzer, dt);
+            slot.Module.Update(UsesDemo(slot) ? _demoAnalyzer! : _analyzer, dt);
         }
         if (now < _nextPreview) return;
         _nextPreview = now + 0.05;
@@ -123,6 +141,13 @@ internal sealed partial class RenderHost
             {
                 _ctx.Theme = ThemeFor(slot.Module);
                 slot.Module.Render(canvas, rect, _ctx);
+                if (UsesDemo(slot))
+                {
+                    // Signalé discrètement : ce n'est pas le son du moment.
+                    float p = _ctx.P;
+                    _ctx.Labels.Draw(canvas, "DEMO", rect.Right - _ctx.Labels.Measure("DEMO") - 2 * p,
+                        rect.Bottom - _ctx.Labels.CapHeight - 2 * p, _ctx.Theme.InkDim);
+                }
             }
             catch (Exception ex)
             {
@@ -141,6 +166,61 @@ internal sealed partial class RenderHost
                 frame.Height = slot.Bitmap.Height;
                 frame.Version++;
             }
+        }
+    }
+
+    private bool UsesDemo(PreviewSlot slot) => _demoOn && StereoModules.Contains(slot.Module.Info.Id);
+
+    /// <summary>
+    /// Mesure si le son du moment est stéréo (énergie côtés / centre) ; mono ou muet pendant une seconde,
+    /// la démo prend le relais pour les modules stéréo de la galerie, et le rend dès que la stéréo revient.
+    /// </summary>
+    private void UpdateStereoDemo(double dt)
+    {
+        bool wanted = _demoAllowed && _previews.Values.Any(s => StereoModules.Contains(s.Module.Info.Id));
+        if (!wanted)
+        {
+            // À la prochaine ouverture, la mesure repart de « mono » : la stéréo réelle la contredit en un instant.
+            _demoOn = false;
+            _demoHold = 0;
+            _sideRatio = 0;
+            return;
+        }
+
+        int n = _analyzer.Count;
+        if (n > 0)
+        {
+            double side = 0, mid = 0;
+            var left = _analyzer.Left;
+            var right = _analyzer.Right;
+            for (int i = 0; i < n; i++)
+            {
+                double l = left[i], r = right[i];
+                side += (l - r) * (l - r);
+                mid += (l + r) * (l + r);
+            }
+            bool silent = Math.Max(_analyzer.RmsL, _analyzer.RmsR) < 1e-3f;
+            double ratio = silent ? 0 : side / Math.Max(mid, 1e-12);
+            _sideRatio += (ratio - _sideRatio) * Math.Min(1, dt / 0.4);
+        }
+        // Côtés plus de ~25 dB sous le centre : mono en pratique. Hystérésis pour ne pas clignoter.
+        bool mono = _sideRatio < (_demoOn ? 0.01 : 0.003);
+        _demoHold = mono != _demoOn ? _demoHold + dt : 0;
+        if (_demoHold > 1.0)
+        {
+            _demoOn = mono;
+            _demoHold = 0;
+            if (_demoOn && _demoAnalyzer is null)
+            {
+                _demo = new StereoDemo();
+                _demoAnalyzer = new AudioAnalyzer(_demo.Ring);
+            }
+            if (_demoOn) _demoAnalyzer!.Resync();
+        }
+        if (_demoOn)
+        {
+            _demo!.Advance(dt);
+            _demoAnalyzer!.Process(dt);
         }
     }
 

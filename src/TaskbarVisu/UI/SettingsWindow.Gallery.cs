@@ -259,7 +259,8 @@ public partial class SettingsWindow
             _previewTimer?.Stop();
             return;
         }
-        host.SetPreviews(CurrentPreviews().Select(v => (v.Id, v.WidthDip)).ToArray());
+        // Galerie : démo stéréo pour l'imageur et l'oscilloscope XY si le son du moment est mono.
+        host.SetPreviews(CurrentPreviews().Select(v => (v.Id, v.WidthDip)).ToArray(), demo: Tabs.SelectedItem == TabLayout);
         if (_previewTimer is null)
         {
             _previewTimer = new DispatcherTimer(DispatcherPriority.Render) { Interval = TimeSpan.FromMilliseconds(50) };
