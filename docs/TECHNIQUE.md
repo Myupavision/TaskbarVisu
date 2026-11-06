@@ -31,8 +31,8 @@ posés dans les espaces libres à gauche et à droite des icônes, sans cadre.
 
 Disposition par défaut : niveaux, spectrogramme et spectre à gauche ; imageur, accordeur et forme d'onde
 à droite. VU-mètre, historique de sonie, piano roll, oscilloscope XY et données brutes
-sont disponibles mais masqués (page Disposition). Au lancement, chaque module fait un court
-*self-test* (balayage LED, « OK ») avant de s'allumer ; désactivable dans Général.
+sont disponibles mais masqués (page Ma barre). Au lancement, chaque module fait un court
+*self-test* (balayage LED, « OK ») avant de s'allumer ; désactivable dans Réglages.
 
 ### Détection de tonalité
 
@@ -142,7 +142,7 @@ la trace liste aussi les pics de chaque image (fréquence:amplitude:part non exp
 - Chaque module peut avoir ses propres couleurs : une autre palette, son propre dégradé ou une couleur unie.
 - Pas de fond : les modules se fondent dans la barre (fond écran LCD olive clair en option, pour le style LCD).
 - Mes styles : le style actuel (couleurs, effets, fond, couleurs des modules) enregistré sous un nom et réappliqué
-  en un clic depuis Apparence ou Accueil ; le menu « ⋯ » le met à jour, le renomme, copie son code ou le supprime.
+  en un clic depuis la page Style ; le menu « ⋯ » le met à jour, le renomme, copie son code ou le supprime.
 - Partager un style : code court `TBV1:…` (JSON compressé, à coller sur Discord) ou fichier `.tbvstyle`.
   Le style comprend palette, effets, fond et couleurs de chaque module, pas la disposition.
 
@@ -197,38 +197,37 @@ l'ensemble de travail redescend sous ≈ 30 Mo.
 ## Langues
 
 Français, English, Español, Deutsch : la langue de Windows est utilisée automatiquement
-(anglais si elle n'est pas disponible), modifiable dans Général > Langue. Les traductions
+(anglais si elle n'est pas disponible), modifiable dans Réglages > Langue. Les traductions
 sont dans `Core/Loc.cs` (le texte français sert de clé).
 
 ## Réglages
 
 Clic sur l'icône de la zone de notification → fenêtre de réglages, comme les Paramètres de Windows 11 :
-menu à gauche, et chaque réglage est une carte avec une icône et une phrase d'explication.
+trois pages à gauche, et chaque réglage est une carte avec une icône et une phrase d'explication. Chaque réglage
+n'est qu'à un seul endroit. Les titres des pages et le nom de l'application sont en matrice de points 5×7, la police
+des modules, allumés à la couleur du style actif. En bas du menu, sur chaque page : Masquer et Pause, et le bouton
+d'installation quand une nouvelle version est disponible.
 
-- **Accueil** : ce qui est écouté, la place libre sur la barre, boutons Masquer / Pause, les styles en un
-  clic, les modules affichés (un clic ouvre le module dans Disposition) et les raccourcis utiles.
-- **Général** : démarrage (avec Windows, fermer vers la zone de notification, animation d'allumage),
-  source audio, langue, écran (principal, tous, ou un écran précis), plein écran, raccourci clavier,
-  mises à jour, i/s, résolution FFT, économie d'énergie, dossier des réglages.
-- **Apparence** : préréglages en cartes (le style actif est entouré), couleurs (palette, animation des couleurs,
-  textes, clair / sombre), effets, Mes styles (enregistrer le style actuel), partage de style replié.
+- **Ma barre** : la barre des tâches en miniature, modules à l'échelle et place restante par zone.
+  Un clic sur un module le sélectionne : juste dessous, sa largeur (60 à 400 px), décaler, changer de côté,
+  retirer, puis toutes ses options (couleurs, réglages propres, « Plus d'options » replié, réinitialiser) ;
+  on peut aussi le glisser. Ensuite, « Ajouter un module » : les modules qui ne sont pas sur la barre, rangés
+  par catégorie (Volume, Fréquences, Stéréo, Notes, Spectacle, Signal brut), chacun avec un aperçu en direct
+  sur le son du moment et + Gauche / + Droite. Icônes alignées à gauche : deux zones ou tout au centre.
+  « Placement et espacement » replié en bas (étirement ou placement, espacement, fondu, marge verticale).
+- **Style** : préréglages en cartes (le style actif est entouré), Mes styles (enregistrer le style actuel),
+  couleurs (palette, animation des couleurs, textes, clair / sombre), effets, partage de style replié.
   En haut, épinglée, la barre en direct : les modules affichés tournent sur le son du moment, chaque réglage s'y voit tout de suite.
-- **Disposition** : la barre des tâches en miniature, modules à l'échelle et place restante par zone.
-  Un clic sur un module ouvre ses réglages (largeur de 60 à 400 px, décaler, changer de côté, retirer,
-  options) ; on peut aussi le glisser. En dessous : tous les modules rangés en six catégories (Volume, Fréquences,
-  Stéréo, Notes, Spectacle, Signal brut) avec un filtre, chacun avec un aperçu en direct sur le son du moment
-  (+ Gauche / + Droite, ou « Sur la barre » s'il y est déjà),
-  icônes alignées à gauche (deux zones ou tout au centre), puis les réglages fins repliés (étirement ou
-  placement, espacement, fondu, marge verticale).
+- **Réglages** : source audio, démarrage (avec Windows, fermer vers la zone de notification, animation
+  d'allumage, guide), affichage (langue, écran principal, tous ou un écran précis, plein écran, raccourci
+  clavier), mises à jour, aide et diagnostic, puis replié : i/s, résolution FFT, économie d'énergie, dossier des réglages.
 - **Guide de démarrage** : au premier lancement, cinq étapes avec « Passer » toujours visible. Les zones
   libres clignotent sur la vraie barre, choix d'une ambiance (préréglage) et d'un pack de modules
   (Studio, Musicien, Minimal ou « Je choisis moi-même », qui part d'une barre vide), source audio, démarrage et raccourci, puis une
-  flèche sur la barre montre l'icône de la zone de notification. Il se rejoue depuis Accueil ou Général.
+  flèche sur la barre montre l'icône de la zone de notification. Il se rejoue depuis Réglages.
 
   ![Guide de démarrage](welcome.png)
 
-- **Modules** : options propres à chaque module, réinitialisables ; modules affichés d'abord, puis les masqués rangés par catégorie
-  (avec « Afficher sur la barre »).
 
 Réglages et journal : `%APPDATA%\TaskbarVisu\` (`settings.json`, `log.txt`). Mode portable : avec un fichier
 `portable.txt` à côté de `TaskbarVisu.exe` (fourni dans le zip portable), ils vont dans le dossier `data`
@@ -264,7 +263,7 @@ Arguments : `--tray` (démarre sans ouvrir les réglages, utilisé par le démar
 `--dump <dossier>` (diagnostic : PNG du rendu et profil toutes les 5 s : temps et octets alloués par
 module, mémoire, collectes et types les plus alloués),
 `--selftest-ui` (diagnostic : construit la fenêtre de réglages et le guide hors écran puis quitte ; avec
-`--dump`, captures de chaque onglet et de chaque étape du guide),
+`--dump`, captures de chaque page et de chaque étape du guide),
 `--guide zones|tray` (diagnostic : affiche un repère du guide de démarrage sur la barre),
 `--test-signal` (diagnostic : signal synthétique à la place de la capture, rien n'est joué),
 `--headless` (diagnostic : instance séparée qui n'affiche aucune fenêtre),

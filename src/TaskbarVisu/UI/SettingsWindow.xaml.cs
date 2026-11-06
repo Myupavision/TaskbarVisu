@@ -94,6 +94,10 @@ public partial class SettingsWindow : Window
         TabBar.Header = NavHeader("", "Ma barre");
         TabStyle.Header = NavHeader("", "Style");
         TabSettings.Header = NavHeader("", "Réglages");
+        // Les en-têtes mêlent icône et texte : le nom dit aux lecteurs d'écran quelle page ils ouvrent.
+        System.Windows.Automation.AutomationProperties.SetName(TabBar, Loc.T("Ma barre"));
+        System.Windows.Automation.AutomationProperties.SetName(TabStyle, Loc.T("Style"));
+        System.Windows.Automation.AutomationProperties.SetName(TabSettings, Loc.T("Réglages"));
         AppName.Lit = BrandBrush();
 
         BuildLayout();

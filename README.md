@@ -69,7 +69,7 @@ Real meters, always in view while you produce, mix or practise.
 ## Pick a look
 
 <p align="center">
-  <img src="docs/appearance.png" width="85%" alt="The Appearance page of the settings window: the live taskbar preview on top, then eleven presets.">
+  <img src="docs/appearance.png" width="85%" alt="The Style page of the settings window: the live taskbar preview on top, then eleven presets.">
 </p>
 
 Eleven presets in one click, from *Lab* and *CRT Phosphor* to hardware looks: *VFD*, *LCD*, *Nixie*.

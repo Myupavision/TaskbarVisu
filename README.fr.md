@@ -69,7 +69,7 @@ De vrais instruments de mesure, toujours visibles pendant que vous produisez, mi
 ## Choisissez un look
 
 <p align="center">
-  <img src="docs/appearance.fr.png" width="85%" alt="La page Apparence de la fenêtre de réglages : l'aperçu en direct de la barre en haut, puis onze préréglages.">
+  <img src="docs/appearance.fr.png" width="85%" alt="La page Style de la fenêtre de réglages : l'aperçu en direct de la barre en haut, puis onze préréglages.">
 </p>
 
 Onze préréglages en un clic, de *Labo* et *CRT Phosphore* aux looks matériels : *VFD*, *LCD*, *Nixie*.
