@@ -7,7 +7,8 @@ namespace TaskbarVisu.Core;
 
 /// <param name="InstallerUrl">Installeur de la release (null s'il manque : on ouvre alors la page).</param>
 /// <param name="InstallerSha256">Empreinte publiée par GitHub pour l'installeur, vérifiée après le téléchargement.</param>
-internal sealed record UpdateInfo(Version Version, string Tag, string PageUrl, string? InstallerUrl, string? InstallerSha256);
+/// <param name="Version">Version de la release, telle qu'affichée (« 1.0.0 », « 1.0.0-beta.2 »).</param>
+internal sealed record UpdateInfo(string Version, string Tag, string PageUrl, string? InstallerUrl, string? InstallerSha256);
 
 /// <summary>
 /// Mises à jour : dernière release publiée sur GitHub. Version installée → téléchargement de l'installeur et
@@ -18,9 +19,59 @@ internal static class UpdateChecker
     public const string Repository = "Myupavision/TaskbarVisu";
     public static string ReleasesPage => $"https://github.com/{Repository}/releases";
 
-    public static Version Current { get; } = typeof(UpdateChecker).Assembly.GetName().Version ?? new Version(0, 0);
+    /// <summary>Version de cette build, suffixe de préversion compris (« 1.0.0-beta »), sans l'empreinte du commit.</summary>
+    public static string CurrentText { get; } = ReadCurrent();
 
-    public static string CurrentText => $"{Current.Major}.{Current.Minor}.{Math.Max(0, Current.Build)}";
+    private static string ReadCurrent()
+    {
+        var assembly = typeof(UpdateChecker).Assembly;
+        string? informational = System.Reflection.CustomAttributeExtensions
+            .GetCustomAttribute<System.Reflection.AssemblyInformationalVersionAttribute>(assembly)?.InformationalVersion;
+        if (informational is { Length: > 0 })
+        {
+            string text = informational.Split('+')[0];
+            if (TryParse(text, out _, out _)) return text;
+        }
+        var v = assembly.GetName().Version ?? new Version(0, 0);
+        return $"{v.Major}.{v.Minor}.{Math.Max(0, v.Build)}";
+    }
+
+    /// <summary>« 1.2.3 » ou « 1.2.3-beta.2 » : nombres, puis identifiants de préversion (règles SemVer).</summary>
+    private static bool TryParse(string text, out Version numbers, out string[] prerelease)
+    {
+        int dash = text.IndexOf('-');
+        prerelease = dash < 0 ? Array.Empty<string>() : text[(dash + 1)..].Split('.');
+        string core = dash < 0 ? text : text[..dash];
+        if (!Version.TryParse(core, out var parsed) || prerelease.Any(p => p.Length == 0))
+        {
+            numbers = new Version(0, 0);
+            return false;
+        }
+        numbers = new Version(parsed.Major, parsed.Minor, Math.Max(0, parsed.Build));
+        return true;
+    }
+
+    /// <summary>
+    /// Ordre SemVer : 1.0.0-beta &lt; 1.0.0-beta.2 &lt; 1.0.0-rc &lt; 1.0.0. Une version invalide est la plus ancienne.
+    /// </summary>
+    internal static int Compare(string a, string b)
+    {
+        bool okA = TryParse(a, out var na, out var pa), okB = TryParse(b, out var nb, out var pb);
+        if (!okA || !okB) return okA.CompareTo(okB);
+        int c = na.CompareTo(nb);
+        if (c != 0) return c;
+        // À nombres égaux, la version finale passe devant ses préversions.
+        if (pa.Length == 0 || pb.Length == 0) return pb.Length.CompareTo(pa.Length);
+        for (int i = 0; i < Math.Min(pa.Length, pb.Length); i++)
+        {
+            bool numA = int.TryParse(pa[i], out int ia), numB = int.TryParse(pb[i], out int ib);
+            c = numA && numB ? ia.CompareTo(ib)
+                : numA != numB ? (numA ? -1 : 1)
+                : string.CompareOrdinal(pa[i], pb[i]);
+            if (c != 0) return c;
+        }
+        return pa.Length.CompareTo(pb.Length);
+    }
 
     /// <summary>Installée par l'installeur (dossier Programs de l'utilisateur), et non lancée en portable.</summary>
     public static bool IsInstalled =>
@@ -36,7 +87,8 @@ internal static class UpdateChecker
         using var doc = JsonDocument.Parse(json);
         var root = doc.RootElement;
         string tag = root.GetProperty("tag_name").GetString() ?? string.Empty;
-        if (!Version.TryParse(tag.TrimStart('v', 'V'), out var version)) return null;
+        string version = tag.TrimStart('v', 'V');
+        if (!TryParse(version, out _, out _)) return null;
 
         string? installer = null, sha256 = null;
         if (root.TryGetProperty("assets", out var assets))
@@ -50,10 +102,8 @@ internal static class UpdateChecker
                          && d.StartsWith("sha256:", StringComparison.OrdinalIgnoreCase) ? d[7..] : null;
             }
         }
-        var current = new Version(Current.Major, Current.Minor, Math.Max(0, Current.Build));
-        var latest = new Version(version.Major, version.Minor, Math.Max(0, version.Build));
-        return latest > current
-            ? new UpdateInfo(latest, tag, root.GetProperty("html_url").GetString() ?? ReleasesPage, installer, sha256)
+        return Compare(version, CurrentText) > 0
+            ? new UpdateInfo(version, tag, root.GetProperty("html_url").GetString() ?? ReleasesPage, installer, sha256)
             : null;
     }
 

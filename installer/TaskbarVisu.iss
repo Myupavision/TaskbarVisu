@@ -5,6 +5,10 @@
 #ifndef AppVersion
   #define AppVersion "0.0.0"
 #endif
+; Version de fichier Windows : nombres seulement (« 1.0.0 » pour « 1.0.0-beta »).
+#ifndef AppFileVersion
+  #define AppFileVersion AppVersion
+#endif
 
 [Setup]
 AppId={{6B0E3F52-6D2A-4C1B-9E7A-2F1C9A7D5E10}
@@ -14,7 +18,7 @@ AppPublisher=TaskbarVisu
 AppPublisherURL=https://github.com/Myupavision/TaskbarVisu
 AppSupportURL=https://github.com/Myupavision/TaskbarVisu/issues
 AppUpdatesURL=https://github.com/Myupavision/TaskbarVisu/releases
-VersionInfoVersion={#AppVersion}
+VersionInfoVersion={#AppFileVersion}
 DefaultDirName={localappdata}\Programs\TaskbarVisu
 DefaultGroupName=TaskbarVisu
 DisableProgramGroupPage=yes

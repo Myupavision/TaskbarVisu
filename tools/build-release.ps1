@@ -85,7 +85,7 @@ if ($SkipInstaller) {
         (Join-Path $env:ProgramFiles 'Inno Setup 6\ISCC.exe')
     ) | Where-Object { $_ -and (Test-Path $_) } | Select-Object -First 1
     if (-not $iscc) { throw 'ISCC.exe introuvable : installez Inno Setup 6 (ou relancez avec -SkipInstaller).' }
-    & $iscc /Q "/DAppVersion=$version" (Join-Path $root 'installer\TaskbarVisu.iss')
+    & $iscc /Q "/DAppVersion=$version" "/DAppFileVersion=$($version.Split('-')[0])" (Join-Path $root 'installer\TaskbarVisu.iss')
     if ($LASTEXITCODE -ne 0) { throw 'ISCC a échoué' }
 }
 
