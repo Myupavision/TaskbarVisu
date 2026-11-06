@@ -13,8 +13,9 @@ using TaskbarVisu.Taskbar;
 namespace TaskbarVisu.UI;
 
 /// <summary>
-/// Onglet Disposition : la barre des tâches en miniature, à l'échelle, avec seulement les modules affichés
-/// (clic = régler, glisser = déplacer), le module choisi, la galerie des modules (SettingsWindow.Gallery.cs) et les réglages fins repliés.
+/// Page Ma barre : la barre des tâches en miniature, à l'échelle, avec seulement les modules affichés
+/// (clic = régler, glisser = déplacer), puis le module choisi avec tous ses réglages, les modules à ajouter
+/// (SettingsWindow.Gallery.cs) et le placement replié.
 /// </summary>
 public partial class SettingsWindow
 {
@@ -43,16 +44,14 @@ public partial class SettingsWindow
 
     private void BuildLayout()
     {
-        var p = LayoutRoot;
+        var p = BarRoot;
         p.Children.Clear();
         _press = null;
         _dragging = false;
         if (_selected is not null && !S.AllModules.Contains(_selected)) _selected = null;
 
         var bar = _app.Tracker.Current;
-        PageHeader(p, "Disposition", "Votre barre des tâches en miniature, avec les modules affichés à l'échelle. " +
-                                     "Cliquez sur un module pour le régler, glissez-le pour le déplacer.");
-        p.Children.Add(Section("Votre barre"));
+        PageHeader(p, "Ma barre", "Cliquez sur un module pour le régler, glissez-le pour le déplacer.");
 
         // Icônes alignées à gauche : un seul grand espace, le choix principal se fait ici.
         if (bar.Valid && !bar.Spanning.IsEmpty)
@@ -74,7 +73,7 @@ public partial class SettingsWindow
             Background = new SolidColorBrush(light ? Color.FromRgb(0xEE, 0xEE, 0xF0) : Color.FromRgb(0x1C, 0x1C, 0x20)),
             BorderBrush = new SolidColorBrush(Color.FromArgb(0x50, 0x80, 0x80, 0x80)),
             BorderThickness = new Thickness(1),
-            Margin = new Thickness(0, 8, 0, 0),
+            Margin = new Thickness(0, 14, 0, 0),
             Child = _mini,
         };
         _mini.SizeChanged += (_, _) => DrawMini();
@@ -111,7 +110,6 @@ public partial class SettingsWindow
         Changed();
         DrawMini();
         BuildSelection();
-        BuildModules();
     }
 
     // ------------------------------------------------------------ Miniature
@@ -393,7 +391,7 @@ public partial class SettingsWindow
         if (cfg is null || !cfg.Enabled)
         {
             p.Children.Add(Card(S.AllModules.Any(m => m.Enabled)
-                ? "Cliquez sur un module de la barre pour régler sa largeur, le déplacer ou le retirer."
+                ? "Cliquez sur un module de la barre pour le régler."
                 : "La barre est vide : ajoutez un premier module ci-dessous.", null, ""));
             return;
         }
@@ -455,15 +453,7 @@ public partial class SettingsWindow
             cfg.Enabled = false;
             _selected = null;
             LayoutChanged();
-            BuildLayout(); // la galerie le propose de nouveau
-        });
-        Add("Options du module…", true, () =>
-        {
-            _expanded.Add(cfg.Id);
-            BuildModules();
-            Tabs.SelectedItem = TabModules;
-            if (_moduleExpanders.TryGetValue(cfg.Id, out var target))
-                Dispatcher.BeginInvoke(DispatcherPriority.Loaded, new Action(target.BringIntoView));
+            BuildLayout(); // la liste des modules à ajouter le propose de nouveau
         });
         body.Children.Add(buttons);
 
@@ -471,6 +461,12 @@ public partial class SettingsWindow
         var frame = CardFrame(body, new Thickness(16, 12, 16, 6));
         frame.BorderBrush = AccentBrush(App.UiIsLight);
         p.Children.Add(frame);
+
+        // Juste dessous, tous les réglages du module : rien à chercher ailleurs.
+        var settings = new StackPanel { Margin = new Thickness(0, 4, 0, 0) };
+        AddModuleSettings(settings, cfg);
+        MergeHints(settings);
+        p.Children.Add(settings);
     }
 
     // ------------------------------------------------------------ Galerie et réglages fins
@@ -514,18 +510,18 @@ public partial class SettingsWindow
             S.ResetLayout();
             _selected = null;
             Changed();
-            BuildModules();
             BuildLayout();
         }, "Remet les modules et leur placement par défaut.", "");
 
-        p.Children.Add(Folded("layout.fine", "Réglages fins", body, new Thickness(0, 22, 0, 0)));
+        p.Children.Add(Folded("layout.fine", "Placement et espacement", body, new Thickness(0, 22, 0, 0)));
     }
 
-    /// <summary>Auto-test : choisit le premier module affiché et déplie les réglages fins, pour la capture.</summary>
+    /// <summary>Auto-test : choisit le premier module affiché et déplie ses options et le placement, pour la capture.</summary>
     internal void PrepareLayoutSnapshot()
     {
         _selected = S.AllModules.FirstOrDefault(c => c.Enabled);
         _expanded.Add("layout.fine");
+        if (_selected is not null) _expanded.Add(_selected.Id + ".more");
         BuildLayout();
     }
 

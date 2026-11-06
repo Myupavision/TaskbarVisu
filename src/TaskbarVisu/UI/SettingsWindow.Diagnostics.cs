@@ -5,7 +5,7 @@ using TaskbarVisu.Core;
 
 namespace TaskbarVisu.UI;
 
-/// <summary>Page Général, section Aide et diagnostic : consommation en direct et rapport de bug en un clic.</summary>
+/// <summary>Page Réglages, section Aide et diagnostic : consommation en direct et rapport de bug en un clic.</summary>
 public partial class SettingsWindow
 {
     private readonly UsageMeter _usage = new();
@@ -39,12 +39,12 @@ public partial class SettingsWindow
             "Copie la version, Windows, vos réglages et la fin du journal (sans votre nom d'utilisateur), puis ouvre un nouveau ticket : collez le rapport avec Ctrl+V."));
     }
 
-    /// <summary>Chaque seconde : la mesure tourne toujours (pour le rapport), l'affichage seulement sur la page Général.</summary>
+    /// <summary>Chaque seconde : la mesure tourne toujours (pour le rapport), l'affichage seulement sur la page Réglages.</summary>
     private void UpdateUsage()
     {
         var (cpu, memory) = _usage.Sample();
         _usageText = Loc.F("Processeur {0:0.0} % · mémoire {1:0} Mo", cpu, memory);
-        if (_usageTitle is not null && Tabs.SelectedItem == TabGeneral)
+        if (_usageTitle is not null && Tabs.SelectedItem == TabSettings)
             _usageTitle.Text = Loc.F("Consommation de TaskbarVisu : {0}", _usageText);
     }
 }

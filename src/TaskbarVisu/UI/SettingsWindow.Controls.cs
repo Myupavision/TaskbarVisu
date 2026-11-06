@@ -23,9 +23,14 @@ public partial class SettingsWindow
     /// <summary>Ce qu'une carte expose : la colonne des textes, où viennent s'ajouter les aides.</summary>
     private sealed record CardParts(StackPanel Texts);
 
-    private static void PageHeader(Panel p, string title, string subtitle)
+    /// <summary>Titre de page en matrice de points, à la couleur du style actif, puis une phrase d'explication.</summary>
+    private void PageHeader(Panel p, string title, string subtitle)
     {
-        p.Children.Add(new TextBlock { Text = Loc.T(title), FontSize = 28, FontWeight = FontWeights.SemiBold, Margin = new Thickness(2, 0, 0, 2) });
+        p.Children.Add(new DotMatrixText
+        {
+            Text = Loc.T(title).ToUpperInvariant(), Dot = 4, Lit = BrandBrush(),
+            HorizontalAlignment = HorizontalAlignment.Left, Margin = new Thickness(2, 4, 0, 12),
+        });
         var sub = new TextBlock { Text = Loc.T(subtitle), FontSize = 13.5, TextWrapping = TextWrapping.Wrap, Margin = new Thickness(2, 0, 0, 4) };
         sub.SetResourceReference(TextBlock.ForegroundProperty, "TextFillColorSecondaryBrush");
         p.Children.Add(sub);

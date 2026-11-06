@@ -12,7 +12,7 @@ namespace TaskbarVisu.UI;
 
 /// <summary>
 /// Fenêtre de réglages façon Paramètres de Windows 11 (thème Fluent de WPF) : navigation à gauche
-/// (Accueil, Apparence, Disposition, Modules, Général), réglages en cartes. Tout s'applique en direct.
+/// (Ma barre, Style, Réglages), réglages en cartes. Tout s'applique en direct, et chaque réglage n'est qu'à un endroit.
 /// Les options des modules sont générées depuis <see cref="ModuleCatalog"/>.
 /// </summary>
 public partial class SettingsWindow : Window
@@ -23,7 +23,6 @@ public partial class SettingsWindow : Window
     private readonly App _app = App.Instance;
     private readonly DispatcherTimer _statusTimer;
     private readonly HashSet<string> _expanded = new();
-    private readonly Dictionary<string, Expander> _moduleExpanders = new();
     private ModuleConfig? _selected;
     private Action? _updateHandler;
 
@@ -32,6 +31,16 @@ public partial class SettingsWindow : Window
     public SettingsWindow()
     {
         InitializeComponent();
+        HideButton.Click += (_, _) =>
+        {
+            _app.ToggleVisuals();
+            RefreshSideActions();
+        };
+        PauseButton.Click += (_, _) =>
+        {
+            _app.TogglePause();
+            RefreshSideActions();
+        };
         RebuildAll();
         Tabs.SelectionChanged += OnPageChanged;
 
@@ -82,17 +91,14 @@ public partial class SettingsWindow : Window
     {
         Title = Loc.T("TaskbarVisu — Paramètres");
         VersionText.Text = Loc.F("Version {0}", UpdateChecker.CurrentText);
-        TabHome.Header = NavHeader("", "Accueil");
-        TabAppearance.Header = NavHeader("", "Apparence");
-        TabLayout.Header = NavHeader("", "Disposition");
-        TabModules.Header = NavHeader("", "Modules");
-        TabGeneral.Header = NavHeader("", "Général");
+        TabBar.Header = NavHeader("", "Ma barre");
+        TabStyle.Header = NavHeader("", "Style");
+        TabSettings.Header = NavHeader("", "Réglages");
+        AppName.Lit = BrandBrush();
 
-        BuildHome();
-        BuildGeneral();
-        BuildAppearance();
         BuildLayout();
-        BuildModules();
+        BuildAppearance();
+        BuildGeneral();
         UpdateStatus();
     }
 
@@ -111,22 +117,19 @@ public partial class SettingsWindow : Window
     private void OnPageChanged(object sender, SelectionChangedEventArgs e)
     {
         if (!ReferenceEquals(e.OriginalSource, Tabs)) return;
-        if (Tabs.SelectedItem == TabHome) BuildHome();
-        else if (Tabs.SelectedItem == TabAppearance) BuildAppearance();
-        else if (Tabs.SelectedItem == TabModules) BuildModules();
-        else if (Tabs.SelectedItem == TabLayout) BuildLayout();
+        if (Tabs.SelectedItem == TabStyle) BuildAppearance();
+        else if (Tabs.SelectedItem == TabBar) BuildLayout();
+        else if (Tabs.SelectedItem == TabSettings) UpdateUsage();
         RequestPreviews();
     }
 
-    private void GoTo(TabItem page) => Tabs.SelectedItem = page;
-
-    // ---------------------------------------------------------------- Général
+    // ---------------------------------------------------------------- Réglages
 
     private void BuildGeneral()
     {
-        var p = GeneralPanel;
+        var p = SettingsPanel;
         p.Children.Clear();
-        PageHeader(p, "Général", "Ce que TaskbarVisu écoute, son démarrage, son affichage et ses mises à jour.");
+        PageHeader(p, "Réglages", "Le son écouté, le démarrage, l'affichage et les mises à jour.");
 
         // Du plus utile au plus technique ; les réglages fins sont repliés en bas.
         BuildAudioSource(p);
@@ -170,12 +173,11 @@ public partial class SettingsWindow : Window
         AddToggle(p, "Masquer en plein écran", S.HideWhenFullscreen, v => S.HideWhenFullscreen = v,
             "Jeux, vidéos, présentations : les visualiseurs s'effacent tant qu'une application est en plein écran.", "");
 
-        p.Children.Add(Section("Raccourci clavier"));
         AddCombo(p, "Masquer / afficher les visualiseurs", HotkeyManager.Names, (int)S.Hotkey, i =>
         {
             S.Hotkey = (HotkeyChoice)i;
             // L'aide dit si le raccourci est libre : on la met à jour une fois le raccourci appliqué.
-            Dispatcher.BeginInvoke(() => RebuildKeepingScroll(GeneralPanel, BuildGeneral), DispatcherPriority.Background);
+            Dispatcher.BeginInvoke(() => RebuildKeepingScroll(SettingsPanel, BuildGeneral), DispatcherPriority.Background);
         }, icon: "");
         p.Children.Add(Hint(_app.HotkeyAvailable
             ? "Fonctionne partout, même en jeu. Aussi dans le menu de l'icône de la zone de notification."
@@ -367,6 +369,9 @@ public partial class SettingsWindow : Window
     {
         var box = UpdateBox;
         box.Children.Clear();
+        // Sans nouvelle version, rien ici : la vérification à la demande est dans Réglages, section Mises à jour.
+        var update = _app.AvailableUpdate;
+        if (update is null) return;
         if (_app.UpdateStatus.Length > 0)
             box.Children.Add(new TextBlock
             {
@@ -376,7 +381,6 @@ public partial class SettingsWindow : Window
                 TextWrapping = TextWrapping.Wrap,
                 Margin = new Thickness(2, 0, 0, 6),
             });
-        var update = _app.AvailableUpdate;
         var label = new StackPanel { Orientation = Orientation.Horizontal };
         var icon = Glyph(update is null ? "" : "", 14); // synchroniser, télécharger
         icon.Margin = new Thickness(0, 0, 8, 0);
@@ -388,7 +392,8 @@ public partial class SettingsWindow : Window
         var button = new Button { Content = label, HorizontalAlignment = HorizontalAlignment.Stretch, HorizontalContentAlignment = HorizontalAlignment.Left };
         // Le contenu mêle icône et texte : le nom dit aux lecteurs d'écran ce que fait le bouton.
         System.Windows.Automation.AutomationProperties.SetName(button, text);
-        if (update is not null) button.Style = TryFindResource("AccentButtonStyle") as Style;
+        button.Style = TryFindResource("AccentButtonStyle") as Style;
+        button.Margin = new Thickness(0, 0, 0, 8);
         button.Click += async (_, _) =>
         {
             if (_app.AvailableUpdate is not null) await _app.InstallUpdateAsync();
@@ -439,17 +444,17 @@ public partial class SettingsWindow : Window
 
     private void BuildAppearance()
     {
-        var p = AppearancePanel;
+        var p = StylePanel;
         p.Children.Clear();
-        AppearanceHeader.Children.Clear();
-        PageHeader(AppearanceHeader, "Apparence", "Choisissez un style en un clic, puis ajustez les couleurs et les effets si vous le souhaitez.");
-        AppearanceHeader.Children.Add(LiveBar());
+        StyleHeader.Children.Clear();
+        PageHeader(StyleHeader, "Style", "Un style en un clic, puis les couleurs et les effets si vous le souhaitez.");
+        StyleHeader.Children.Add(LiveBar());
 
         // 1. Préréglages : un clic règle tout le style d'un coup.
         var presets = Section("Préréglages");
         presets.Margin = new Thickness(2, 8, 0, 8);
         p.Children.Add(presets);
-        p.Children.Add(PresetGrid(4, () => RebuildKeepingScroll(AppearancePanel, BuildAppearance), withMine: false));
+        p.Children.Add(PresetGrid(4, () => RebuildKeepingScroll(StylePanel, BuildAppearance), withMine: false));
         BuildMyStyles(p);
 
         // 2. Couleurs : palette des données (avec son éditeur), animation, textes et thème.
@@ -460,7 +465,7 @@ public partial class SettingsWindow : Window
             S.Palette = Palettes[i].Choice;
             customPaletteRow.Visibility = S.Palette == PaletteChoice.Custom ? Visibility.Visible : Visibility.Collapsed;
         }, PaletteTemplate(), description: "Colore les barres, courbes et points de tous les modules, du grave à l'aigu. " +
-                                            "Un module peut avoir ses propres couleurs (page Modules).", icon: "");
+                                            "Un module peut avoir ses propres couleurs (page Ma barre).", icon: "");
         customPaletteRow.Visibility = S.Palette == PaletteChoice.Custom ? Visibility.Visible : Visibility.Collapsed;
         p.Children.Add(customPaletteRow);
         AddAnimationControls(p);
@@ -572,8 +577,8 @@ public partial class SettingsWindow : Window
         {
             if (ok)
             {
-                RebuildKeepingScroll(AppearancePanel, BuildAppearance);
-                BuildModules();
+                RebuildKeepingScroll(StylePanel, BuildAppearance);
+                BuildSelection();
                 Changed();
             }
             else
@@ -679,65 +684,12 @@ public partial class SettingsWindow : Window
         return new DataTemplate { VisualTree = panel };
     }
 
-    // ---------------------------------------------------------------- Modules
+    // ---------------------------------------------------------------- Réglages d'un module
 
-    private void BuildModules()
-    {
-        var p = ModulesPanel;
-        p.Children.Clear();
-        PageHeader(p, "Modules", "Les réglages de chaque visualiseur. Cliquez sur un module pour les voir ; tout s'applique tout de suite.");
-        _moduleExpanders.Clear();
-
-        // D'abord les modules affichés, dans l'ordre de la barre, puis ceux qui sont masqués.
-        var ordered = S.Left.Select(c => (Cfg: c, Side: "zone gauche")).Concat(S.Right.Select(c => (Cfg: c, Side: "zone droite"))).ToList();
-        var shown = ordered.Where(x => x.Cfg.Enabled).ToList();
-        var hidden = ordered.Where(x => !x.Cfg.Enabled).ToList();
-        p.Children.Add(Section("Sur la barre"));
-        if (shown.Count == 0) p.Children.Add(Card("Aucun module affiché : ajoutez-en depuis la page Disposition.", null, ""));
-        foreach (var (cfg, side) in shown) AddModuleExpander(p, cfg, side);
-        if (hidden.Count > 0)
-        {
-            // Les modules masqués, rangés comme dans la galerie de la page Disposition.
-            p.Children.Add(Section("Masqués"));
-            foreach (var category in ModuleCatalog.Categories)
-            {
-                var members = hidden.Where(x => ModuleCatalog.CategoryOf(x.Cfg.Id) == category)
-                    .OrderBy(x => Array.IndexOf(category.Ids, x.Cfg.Id)).ToList();
-                if (members.Count == 0) continue;
-                var title = Description(Loc.T(category.Name).ToUpperInvariant());
-                title.Margin = new Thickness(2, 10, 0, 6);
-                title.FontWeight = FontWeights.SemiBold;
-                p.Children.Add(title);
-                foreach (var (cfg, side) in members) AddModuleExpander(p, cfg, side);
-            }
-        }
-        MergeHints(p);
-    }
-
-    private void AddModuleExpander(Panel p, ModuleConfig cfg, string side)
+    /// <summary>Tous les réglages d'un module, sous le module choisi de la page Ma barre : couleurs, options, réinitialisation.</summary>
+    private void AddModuleSettings(Panel body, ModuleConfig cfg)
     {
         var info = ModuleCatalog.Find(cfg.Id)!;
-        var body = new StackPanel { Margin = new Thickness(0, 4, 0, 6) };
-        var about = Description(Loc.T(info.Description));
-        about.Margin = new Thickness(2, 0, 0, 10);
-        body.Children.Add(about);
-        if (!cfg.Enabled)
-        {
-            var show = new Button
-            {
-                Content = Loc.T("Afficher sur la barre"), HorizontalAlignment = HorizontalAlignment.Left,
-                Margin = new Thickness(0, 0, 0, 10), Style = TryFindResource("AccentButtonStyle") as Style,
-            };
-            show.Click += (_, _) =>
-            {
-                cfg.Enabled = true;
-                _selected = cfg;
-                Changed();
-                BuildLayout();
-                RebuildKeepingScroll(ModulesPanel, BuildModules);
-            };
-            body.Children.Add(show);
-        }
         AddModuleColors(body, cfg);
         foreach (var opt in info.Options.Where(o => !o.Advanced)) AddOption(body, cfg, opt);
 
@@ -756,51 +708,17 @@ public partial class SettingsWindow : Window
             cfg.Options.Clear();
             cfg.Colors = ModuleColorMode.Global;
             cfg.Gradient = null;
-            RebuildKeepingScroll(ModulesPanel, BuildModules);
             Changed();
+            BuildSelection();
         };
         body.Children.Add(reset);
-
-        var expander = new Expander
-        {
-            Header = ModuleHeader(cfg, info, cfg.Enabled && !CentreMode(_app.Tracker.Current) ? side : null),
-            Content = body,
-            IsExpanded = _expanded.Contains(cfg.Id),
-            Margin = new Thickness(0, 0, 0, 4),
-            HorizontalAlignment = HorizontalAlignment.Stretch,
-            HorizontalContentAlignment = HorizontalAlignment.Stretch,
-        };
-        expander.Expanded += (_, _) => _expanded.Add(cfg.Id);
-        expander.Collapsed += (_, _) => _expanded.Remove(cfg.Id);
-        _moduleExpanders[cfg.Id] = expander;
-        p.Children.Add(expander);
-    }
-
-    /// <summary>En-tête d'un module : son icône à ses couleurs, nom, et zone de la barre.</summary>
-    private FrameworkElement ModuleHeader(ModuleConfig cfg, ModuleInfo info, string? side)
-    {
-        var icon = ModuleIcon(cfg, 16);
-        icon.Width = 22;
-        icon.Margin = new Thickness(0, 0, 12, 0);
-        icon.Opacity = cfg.Enabled ? 1 : 0.5;
-        var row = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 4, 0, 4) };
-        row.Children.Add(icon);
-        row.Children.Add(new TextBlock { Text = Loc.T(info.Name), FontSize = 14, VerticalAlignment = VerticalAlignment.Center });
-        if (side is not null)
-        {
-            var where = Description(Loc.T(side));
-            where.Margin = new Thickness(12, 0, 0, 0);
-            where.VerticalAlignment = VerticalAlignment.Center;
-            row.Children.Add(where);
-        }
-        return row;
     }
 
     /// <summary>Ligne « Couleurs » d'un module : générales, une autre palette, ou une couleur unie.</summary>
     private void AddModuleColors(Panel panel, ModuleConfig cfg)
     {
         var palettePanel = new StackPanel();
-        // Palette « Personnalisée » : dégradé propre au module (au départ, celui de l'apparence générale).
+        // Palette « Personnalisée » : dégradé propre au module (au départ, celui du style choisi).
         var gradientRow = GradientRow("Dégradé du module", cfg.Gradient ?? S.Gradient, g => cfg.Gradient = g);
         AddCombo(palettePanel, "Palette du module", PaletteOptions(), PaletteIndex(cfg.ColorPalette), i =>
         {
@@ -820,7 +738,7 @@ public partial class SettingsWindow : Window
             solidRow.Visibility = cfg.Colors == ModuleColorMode.Solid ? Visibility.Visible : Visibility.Collapsed;
         }
 
-        AddCombo(panel, "Couleurs", new[] { "Comme l'apparence générale", "Autre palette", "Couleur unie" },
+        AddCombo(panel, "Couleurs", new[] { "Comme le style choisi", "Autre palette", "Couleur unie" },
             (int)cfg.Colors, i =>
             {
                 cfg.Colors = (ModuleColorMode)i;
@@ -878,9 +796,45 @@ public partial class SettingsWindow : Window
         if (_app.VisualsHidden) barText = Loc.T("Masqués (raccourci) · ") + barText;
         RefreshMiniIfBarChanged();
         RefreshWelcomeZones();
-        RefreshHome();
+        RefreshSideActions();
         StatusText.Text = (_app.IsPaused ? Loc.T("En pause · ") : string.Empty)
                           + Loc.F("Audio : {0}", _app.Audio.StatusText) + "   ·   " + barText;
+    }
+
+    /// <summary>Boutons Masquer et Pause du bas de la navigation : leur texte suit l'état actuel.</summary>
+    private void RefreshSideActions()
+    {
+        HideButton.Content = Loc.T(_app.VisualsHidden ? "Afficher" : "Masquer");
+        PauseButton.Content = Loc.T(_app.IsPaused ? "Reprendre" : "Pause");
+    }
+
+    /// <summary>
+    /// Couleur de la marque : celle du style actif (palette des modules), pour les titres en matrice de points.
+    /// Si elle ressort mal sur le fond de la fenêtre (palette LCD, Monochrome…), le texte principal la remplace.
+    /// </summary>
+    private Brush BrandBrush()
+    {
+        bool light = App.UiIsLight;
+        var theme = Rendering.Theme.Build(S, S.Palette, null, S.Gradient);
+        var c = theme.Spectral(0.72f);
+        var color = Color.FromRgb(c.Red, c.Green, c.Blue);
+        var back = light ? Color.FromRgb(0xF3, 0xF3, 0xF3) : Color.FromRgb(0x20, 0x20, 0x20);
+        if (Contrast(color, back) < 3) color = light ? Color.FromRgb(0x1A, 0x1A, 0x1A) : Color.FromRgb(0xF2, 0xF2, 0xF2);
+        var brush = new SolidColorBrush(color);
+        brush.Freeze();
+        return brush;
+    }
+
+    private static double Contrast(Color a, Color b)
+    {
+        static double Channel(byte v)
+        {
+            double x = v / 255.0;
+            return x <= 0.03928 ? x / 12.92 : Math.Pow((x + 0.055) / 1.055, 2.4);
+        }
+        static double Luminance(Color c) => 0.2126 * Channel(c.R) + 0.7152 * Channel(c.G) + 0.0722 * Channel(c.B);
+        double la = Luminance(a), lb = Luminance(b);
+        return (Math.Max(la, lb) + 0.05) / (Math.Min(la, lb) + 0.05);
     }
 
     private void ResetAll()

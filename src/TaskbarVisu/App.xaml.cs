@@ -283,13 +283,6 @@ public partial class App : Application
             };
             window.Show();
             window.PrepareLayoutSnapshot();
-            // Déplie le premier module (et ses options avancées) pour la capture de l'onglet Modules.
-            if (window.ModulesPanel.Children.OfType<System.Windows.Controls.Expander>().FirstOrDefault() is { } first)
-            {
-                first.IsExpanded = true;
-                if (first.Content is System.Windows.Controls.Panel body)
-                    foreach (var inner in body.Children.OfType<System.Windows.Controls.Expander>()) inner.IsExpanded = true;
-            }
             for (int tab = 0; tab < window.Tabs.Items.Count; tab++)
             {
                 window.Tabs.SelectedIndex = tab;
@@ -305,7 +298,7 @@ public partial class App : Application
                 static ColorPickerButton? FindPicker(object node) => node is ColorPickerButton found ? found
                     : node is DependencyObject d ? LogicalTreeHelper.GetChildren(d).Cast<object>().Select(FindPicker).FirstOrDefault(x => x is not null)
                     : null;
-                FindPicker(window.AppearancePanel)?.RenderPreview(Path.Combine(dumpDir, "colorpicker.png"));
+                FindPicker(window.StylePanel)?.RenderPreview(Path.Combine(dumpDir, "colorpicker.png"));
             }
             // Guide de démarrage : une capture par étape (welcome-1.png…).
             window.ShowWelcome();
@@ -330,7 +323,7 @@ public partial class App : Application
                     }
                 }
                 foreach (var name in HotkeyManager.Names) Loc.T(name);
-                Log.Info($"Auto-test interface OK ({window.ModulesPanel.Children.Count} éléments dans l'onglet Modules)");
+                Log.Info($"Auto-test interface OK ({window.BarRoot.Children.Count} éléments dans la page Ma barre)");
                 lock (Loc.Missing)
                     if (Loc.Missing.Count > 0) Log.Info($"Traductions manquantes ({Loc.Code}) : {string.Join(" | ", Loc.Missing)}");
                 window.Close();

@@ -10,7 +10,7 @@ using TaskbarVisu.Rendering;
 namespace TaskbarVisu.UI;
 
 /// <summary>
-/// Guide de démarrage, au premier lancement (et depuis Général) : cinq étapes qui agissent en direct sur la vraie
+/// Guide de démarrage, au premier lancement (et depuis Réglages) : cinq étapes qui agissent en direct sur la vraie
 /// barre. 1. les zones libres clignotent sur la barre ; 2. un style en un clic ; 3. une sélection de modules ;
 /// 4. source audio, démarrage, raccourci ; 5. une flèche montre l'icône de la zone de notification.
 /// « Passer » reste toujours visible.
@@ -22,7 +22,7 @@ public partial class SettingsWindow
     /// <summary>Étape affichée, ou -1 quand le guide est fermé.</summary>
     private int _welcomeStep = -1;
 
-    /// <summary>« Je choisis moi-même » : le guide se termine sur l'onglet Disposition.</summary>
+    /// <summary>« Je choisis moi-même » : le guide se termine sur la page Ma barre.</summary>
     private bool _welcomeOwnLayout;
 
     private TextBlock? _welcomeZones;
@@ -38,6 +38,7 @@ public partial class SettingsWindow
         _welcomeOwnLayout = false;
         Tabs.Visibility = Visibility.Collapsed;
         AppHeader.Visibility = Visibility.Collapsed;
+        SideActions.Visibility = Visibility.Collapsed;
         Footer.Visibility = Visibility.Collapsed;
         WelcomeRoot.Visibility = Visibility.Visible;
         GoToWelcomeStep(0);
@@ -62,10 +63,11 @@ public partial class SettingsWindow
         WelcomeRoot.Visibility = Visibility.Collapsed;
         Tabs.Visibility = Visibility.Visible;
         AppHeader.Visibility = Visibility.Visible;
+        SideActions.Visibility = Visibility.Visible;
         Footer.Visibility = Visibility.Visible;
         // Les onglets reflètent ce qui a été choisi pendant le guide.
         RebuildAll();
-        Tabs.SelectedItem = _welcomeOwnLayout ? TabLayout : TabGeneral;
+        Tabs.SelectedItem = _welcomeOwnLayout ? TabBar : TabSettings;
         RequestPreviews();
     }
 
@@ -75,15 +77,15 @@ public partial class SettingsWindow
         _welcomeZones = null;
         bool light = App.UiIsLight;
         var accent = AccentBrush(light);
-        var (tag, title, subtitle) = _welcomeStep switch
+        var (_, title, subtitle) = _welcomeStep switch
         {
             0 => ("Zones", "Bienvenue dans TaskbarVisu",
                 "Des visualiseurs audio qui vivent dans les espaces vides de votre barre des tâches. " +
                 "Regardez-la : les zones qui clignotent sont celles où se placent les modules."),
             1 => ("Style", "Choisissez une ambiance",
-                "Un clic, et la barre change aussitôt. Tout reste réglable ensuite dans l'onglet Apparence."),
+                "Un clic, et la barre change aussitôt. Tout reste réglable ensuite dans la page Style."),
             2 => ("Modules", "Que voulez-vous voir ?",
-                "Une sélection pour commencer. Vous pourrez ajouter, retirer et déplacer les modules dans l'onglet Disposition."),
+                "Une sélection pour commencer. Vous pourrez ajouter, retirer et déplacer les modules dans la page Ma barre."),
             3 => ("Réglages", "Derniers réglages", "Ce que TaskbarVisu écoute, et comment il démarre."),
             _ => ("Icône", "Vos réglages sont ici",
                 "TaskbarVisu tourne en arrière-plan, dans la zone de notification : la flèche sur votre barre montre son icône."),
@@ -114,7 +116,7 @@ public partial class SettingsWindow
             {
                 new TextBlock
                 {
-                    Text = $"{_welcomeStep + 1:00} / {WelcomeSteps:00}  ·  {Loc.T(tag).ToUpperInvariant()}",
+                    Text = $"{_welcomeStep + 1:00} / {WelcomeSteps:00}",
                     FontFamily = MonoFont, FontSize = 12, Opacity = 0.7,
                 },
                 progress,
@@ -188,7 +190,7 @@ public partial class SettingsWindow
         p.Children.Add(InfoBox(_welcomeZones));
         RefreshWelcomeZones();
         p.Children.Add(Hint("Les zones suivent la barre toutes seules : icônes ouvertes ou fermées, autre écran, autre taille. " +
-                            "Icônes alignées à gauche ? Les modules peuvent aussi se grouper au centre (onglet Disposition)."));
+                            "Icônes alignées à gauche ? Les modules peuvent aussi se grouper au centre (page Ma barre)."));
     }
 
     /// <summary>La barre en miniature, à l'échelle : zones libres aux couleurs de la palette, qui clignotent avec la vraie.</summary>
@@ -388,7 +390,7 @@ public partial class SettingsWindow
             };
             grid.Children.Add(card);
         }
-        var own = PackCard("Je choisis moi-même", "La barre reste vide : vous ajoutez vos modules un par un, le guide se termine sur l'onglet Disposition.",
+        var own = PackCard("Je choisis moi-même", "La barre reste vide : vous ajoutez vos modules un par un, le guide se termine sur la page Ma barre.",
             null, _welcomeOwnLayout, accent);
         own.Click += (_, _) =>
         {
@@ -522,7 +524,7 @@ public partial class SettingsWindow
             Row(_app.HotkeyText, "Masque ou réaffiche les visualiseurs, partout, même en jeu.");
         Row("^", "Icône introuvable ? Windows range les nouvelles icônes derrière la flèche ^ de la barre : " +
                  "glissez-la à côté de l'horloge pour l'avoir toujours sous la main.");
-        p.Children.Add(Hint("Ce guide se rejoue depuis l'onglet Général."));
+        p.Children.Add(Hint("Ce guide se rejoue depuis la page Réglages."));
     }
 
     // ------------------------------------------------------------ Cartes

@@ -11,7 +11,7 @@ namespace TaskbarVisu.UI;
 
 /// <summary>
 /// « Mes styles » (page Apparence) : le style actuel (palette, animation, textes, effets, fond, couleurs des modules)
-/// enregistré sous un nom et réappliqué en un clic, ici comme sur la page Accueil. Le menu « ⋯ » d'une carte
+/// enregistré sous un nom et réappliqué en un clic. Le menu « ⋯ » d'une carte
 /// la met à jour, la renomme, copie son code ou la supprime.
 /// </summary>
 public partial class SettingsWindow
@@ -33,7 +33,7 @@ public partial class SettingsWindow
         page.Children.Add(Section("Mes styles"));
         var accent = AccentBrush(App.UiIsLight);
         var current = CurrentSavedStyle();
-        void Rebuild() => RebuildKeepingScroll(AppearancePanel, BuildAppearance);
+        void Rebuild() => RebuildKeepingScroll(StylePanel, BuildAppearance);
 
         var note = new TextBlock { TextWrapping = TextWrapping.Wrap, Margin = new Thickness(2, 0, 0, 8), Text = _styleNote ?? string.Empty };
         note.SetResourceReference(TextBlock.ForegroundProperty, "TextFillColorSecondaryBrush");
@@ -94,7 +94,7 @@ public partial class SettingsWindow
             {
                 _lastStyle = new SavedStyle { Name = name, Code = StyleCode.ToCode(S) };
                 S.MyStyles.Add(_lastStyle);
-                _styleNote = Loc.F("Style « {0} » enregistré : il est aussi sur la page Accueil.", name);
+                _styleNote = Loc.F("Style « {0} » enregistré.", name);
             }
             Changed();
             Rebuild();
@@ -132,7 +132,7 @@ public partial class SettingsWindow
                 StyleCode.TryApply(style.Code, S);
                 _lastStyle = style;
                 Changed();
-                BuildModules();
+                BuildSelection();
                 Rebuild();
             };
             var menu = StyleMenu(style, () => OpenEditor(style), Rebuild, Say);

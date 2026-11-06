@@ -10,9 +10,8 @@ using TaskbarVisu.Modules;
 namespace TaskbarVisu.UI;
 
 /// <summary>
-/// Galerie des modules (page Disposition) : rangés par catégorie, avec un filtre, et un aperçu en direct
-/// de chaque module sur le son du moment (rendu par le thread de rendu, à l'échelle de la vraie barre).
-/// Les modules déjà affichés restent dans la galerie, marqués « Sur la barre ».
+/// Modules à ajouter (page Ma barre) : ceux qui ne sont pas sur la barre, rangés par catégorie, avec un aperçu
+/// en direct de chaque module sur le son du moment (rendu par le thread de rendu, à l'échelle de la vraie barre).
 /// </summary>
 public partial class SettingsWindow
 {
@@ -28,40 +27,17 @@ public partial class SettingsWindow
         public int Version = -1;
     }
 
-    // Aperçus de la page Disposition (galerie) et de la page Apparence (barre en direct).
+    // Aperçus de la page Ma barre (modules à ajouter) et de la page Style (barre en direct).
     private readonly List<PreviewView> _layoutPreviews = new(), _appearancePreviews = new();
     private DispatcherTimer? _previewTimer;
     private StackPanel? _galleryPanel;
-    private string? _galleryFilter;
 
     private void BuildGallery(Panel p)
     {
-        p.Children.Add(Section("Tous les modules"));
-        var intro = Description(Loc.T("Ce que chaque module affiche, en direct sur le son du moment. Ajoutez-le à gauche ou à droite de la barre."));
-        intro.Margin = new Thickness(2, -4, 0, 10);
+        p.Children.Add(Section("Ajouter un module"));
+        var intro = Description(Loc.T("En direct sur le son du moment. Ajoutez-le à gauche ou à droite de la barre."));
+        intro.Margin = new Thickness(2, -4, 0, 4);
         p.Children.Add(intro);
-
-        // Filtre : toutes les catégories, ou une seule.
-        var filters = new WrapPanel { Margin = new Thickness(0, 0, 0, 4) };
-        void Filter(string? category, string label)
-        {
-            var b = new ToggleButton
-            {
-                Content = Loc.T(label), IsChecked = _galleryFilter == category,
-                Margin = new Thickness(0, 0, 6, 6), Padding = new Thickness(12, 4, 12, 4),
-            };
-            b.Click += (_, _) =>
-            {
-                _galleryFilter = category;
-                foreach (var other in filters.Children.OfType<ToggleButton>()) other.IsChecked = ReferenceEquals(other, b);
-                FillGallery();
-            };
-            filters.Children.Add(b);
-        }
-        Filter(null, "Tous");
-        foreach (var category in ModuleCatalog.Categories) Filter(category.Name, category.Name);
-        p.Children.Add(filters);
-
         _galleryPanel = new StackPanel();
         p.Children.Add(_galleryPanel);
         FillGallery();
@@ -75,20 +51,21 @@ public partial class SettingsWindow
         _layoutPreviews.Clear();
         bool centre = CentreMode(MiniBar());
 
+        if (S.AllModules.All(c => c.Enabled))
+            p.Children.Add(Card("Tous les modules sont sur la barre.", null));
         foreach (var category in ModuleCatalog.Categories)
         {
-            if (_galleryFilter is not null && _galleryFilter != category.Name) continue;
             var members = category.Ids
                 .Select(id => (Info: ModuleCatalog.Find(id), Cfg: S.AllModules.FirstOrDefault(c => c.Id == id)))
-                .Where(x => x.Info is not null && x.Cfg is not null)
+                .Where(x => x.Info is not null && x.Cfg is not null && !x.Cfg.Enabled)
                 .ToList();
             if (members.Count == 0) continue;
 
             var title = new TextBlock { Text = Loc.T(category.Name), FontSize = 14, FontWeight = FontWeights.SemiBold, Margin = new Thickness(2, 14, 0, 0) };
-            var blurb = Description(Loc.T(category.Blurb));
-            blurb.Margin = new Thickness(2, 1, 0, 8);
+            title.ToolTip = Loc.T(category.Blurb);
             p.Children.Add(title);
-            p.Children.Add(blurb);
+            var spacer = new Border { Height = 8 };
+            p.Children.Add(spacer);
 
             var grid = new UniformGrid { Columns = 3, Margin = new Thickness(0, 0, -8, 0) };
             foreach (var (info, cfg) in members) grid.Children.Add(GalleryCard(info!, cfg!, centre));
@@ -128,23 +105,6 @@ public partial class SettingsWindow
         about.Margin = new Thickness(0, 3, 0, 0);
 
         var buttons = new WrapPanel { Margin = new Thickness(0, 8, 0, 0) };
-        if (cfg.Enabled)
-        {
-            var on = Description("✓ " + Loc.T("Sur la barre"));
-            on.VerticalAlignment = VerticalAlignment.Center;
-            on.Margin = new Thickness(0, 0, 10, 0);
-            buttons.Children.Add(on);
-            var tune = new Button { Content = Loc.T("Régler"), Padding = new Thickness(10, 3, 10, 3) };
-            tune.Click += (_, _) =>
-            {
-                _selected = cfg;
-                DrawMini();
-                BuildSelection();
-                _selectionPanel?.BringIntoView();
-            };
-            buttons.Children.Add(tune);
-        }
-        else
         {
             void AddTo(string text, List<ModuleConfig> target)
             {
@@ -155,7 +115,6 @@ public partial class SettingsWindow
                     Place(cfg, target, null);
                     _selected = cfg;
                     Changed();
-                    BuildModules();
                     BuildLayout();
                 };
                 buttons.Children.Add(b);
@@ -200,7 +159,7 @@ public partial class SettingsWindow
     }
 
     /// <summary>
-    /// Page Apparence : les modules de la barre, en direct et dans l'ordre, sur le fond de la barre.
+    /// Page Style : les modules de la barre, en direct et dans l'ordre, sur le fond de la barre.
     /// Chaque réglage de couleur ou d'effet s'y voit tout de suite.
     /// </summary>
     private FrameworkElement LiveBar()
@@ -221,7 +180,7 @@ public partial class SettingsWindow
         FrameworkElement content = row;
         if (row.Children.Count == 0)
         {
-            var empty = Description(Loc.T("Aucun module affiché : ajoutez-en depuis la page Disposition."));
+            var empty = Description(Loc.T("Aucun module affiché : ajoutez-en depuis la page Ma barre."));
             empty.Margin = new Thickness(12, 0, 12, 0);
             empty.VerticalAlignment = VerticalAlignment.Center;
             content = empty;
@@ -241,13 +200,13 @@ public partial class SettingsWindow
 
     // ------------------------------------------------------------ Aperçus en direct
 
-    /// <summary>Les aperçus ne tournent que si leur page (Disposition ou Apparence) est à l'écran.</summary>
+    /// <summary>Les aperçus ne tournent que si leur page (Ma barre ou Style) est à l'écran.</summary>
     private bool PreviewsWanted() =>
         IsVisible && WindowState != WindowState.Minimized && _welcomeStep < 0 && CurrentPreviews().Count > 0;
 
     /// <summary>Aperçus de la page affichée (aucun pour les autres pages).</summary>
     private List<PreviewView> CurrentPreviews() =>
-        Tabs.SelectedItem == TabLayout ? _layoutPreviews : Tabs.SelectedItem == TabAppearance ? _appearancePreviews : new List<PreviewView>();
+        Tabs.SelectedItem == TabBar ? _layoutPreviews : Tabs.SelectedItem == TabStyle ? _appearancePreviews : new List<PreviewView>();
 
     private void RequestPreviews()
     {
@@ -260,7 +219,7 @@ public partial class SettingsWindow
             return;
         }
         // Galerie : démo stéréo pour l'imageur et l'oscilloscope XY si le son du moment est mono.
-        host.SetPreviews(CurrentPreviews().Select(v => (v.Id, v.WidthDip)).ToArray(), demo: Tabs.SelectedItem == TabLayout);
+        host.SetPreviews(CurrentPreviews().Select(v => (v.Id, v.WidthDip)).ToArray(), demo: Tabs.SelectedItem == TabBar);
         if (_previewTimer is null)
         {
             _previewTimer = new DispatcherTimer(DispatcherPriority.Render) { Interval = TimeSpan.FromMilliseconds(50) };

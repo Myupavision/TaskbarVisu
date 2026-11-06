@@ -111,6 +111,9 @@ internal static class PixelFont
         return Glyphs.TryGetValue(c, out var g) ? g : Glyphs.GetValueOrDefault('*');
     }
 
+    /// <summary>Matrice d'un caractère ([ligne, colonne], 7 lignes), pour les titres de la fenêtre de réglages.</summary>
+    public static bool[,]? Pattern(char c) => Get(c)?.Bits;
+
     public static int Measure(string text, int pixel)
     {
         int w = 0;
