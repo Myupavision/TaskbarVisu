@@ -1,121 +1,119 @@
-# TaskbarVisu
+<h1 align="center">TaskbarVisu</h1>
 
-*English · [Français](README.fr.md)*
+<p align="center">
+  <img src="docs/hero.gif" width="100%" alt="A Windows 11 taskbar, empty at first, then TaskbarVisu switching on: level meter, spectrum and starfield on the left of the icons; ring, waterfall and tuner on the right.">
+</p>
 
-![TaskbarVisu live: levels, spectrum, Hyperspace, Ring, Waterfall, piano roll, stereo imager](docs/showcase.gif)
+<p align="center">
+  <b>Audio visualizers that live inside the Windows 11 taskbar.</b><br>
+  No window, no frame. Your music, drawn into the empty space beside your icons.
+</p>
 
-**Audio visualizers living inside the Windows 11 taskbar.** No window, no frame: tiny lab-grade meters
-drawn straight into the empty space on each side of your icons, in a dot-matrix / y2k / test-equipment style.
+<p align="center">
+  <a href="https://github.com/Myupavision/TaskbarVisu/releases/latest"><b>Download for Windows 11</b></a>
+  &nbsp;·&nbsp;
+  <a href="README.fr.md">Français</a>
+  &nbsp;·&nbsp;
+  <a href="docs/TECHNIQUE.md">Technical notes (FR)</a>
+</p>
 
-![TaskbarVisu on the taskbar, three palettes](docs/showcase.png)
+## For your setup
 
-```
-> CAPTURE ........ WASAPI: the whole PC, one output, ONE APP (process loopback) or an input
-> RENDER ......... SkiaSharp into layered Win32 windows, click-through, ~0.55 ms per frame
-> FOOTPRINT ...... ~4 % of one core at 60 fps, ~0 % in silence, ~35 MB of private memory
-> LAYOUT ......... auto-detects the taskbar (top/bottom, compact, DPI, left-aligned icons) and widgets like FluentFlyout
-> SCREENS ........ main screen, a chosen one, or every taskbar at once
-```
+Visuals that move with whatever is playing, from a game to a playlist.
 
-## Modules
+<table>
+  <tr>
+    <td width="50%"><img src="docs/modules/starfield.gif" width="100%" alt="Hyperspace module"><br><b>Hyperspace</b>: a starfield rushing at you. Each frequency spawns its stars, speed follows the music.</td>
+    <td width="50%"><img src="docs/modules/ring.gif" width="100%" alt="Ring module"><br><b>Ring</b>: the spectrum wrapped into a circle. It breathes on the bass and turns toward the stereo side.</td>
+  </tr>
+  <tr>
+    <td><img src="docs/modules/waterfall.gif" width="100%" alt="Waterfall module"><br><b>Waterfall</b>: one spectrum line per moment, stacked like mountains that recede.</td>
+    <td><img src="docs/modules/spectrogram.gif" width="100%" alt="Spectrogram module"><br><b>Spectrogram</b>: the history of every frequency, scrolling and coloured by intensity.</td>
+  </tr>
+  <tr>
+    <td><img src="docs/modules/waveform.gif" width="100%" alt="Waveform module"><br><b>Waveform</b>: mirror, envelope or triggered oscilloscope.</td>
+    <td><img src="docs/modules/melody.gif" width="100%" alt="Melody module"><br><b>Melody</b>: the leading note leaves a glowing trail on a note grid, slides included.</td>
+  </tr>
+</table>
 
-![The modules](docs/modules.png)
+## For your mix
 
-| | |
-|---|---|
-| **Levels + LUFS** | segmented L/R peak meter, peak hold, clip, BS.1770 loudness with target |
-| **Spectrogram** | scrolling frequency history, coloured by intensity |
-| **Spectrum** | MiniMeters-style relief (smooth curve shaded by level, stereo side trace), bars, LED dots, filled curve or line; held peaks, peak readout (level, frequency, note) |
-| **VU meter** | LED arc or analogue needle, ~300 ms ballistics, mono or stereo |
-| **Stereo imager** | where each frequency sits between left and right (lows at the bottom, highs at the top), or stereo width per frequency; phase correlation |
-| **Tuner / key** | note + cents, or the song's key on a mini piano (English, solfège or Camelot), with key history; or just the note, large and centred |
-| **Waveform** | mirror, envelope or triggered oscilloscope |
-| **Loudness history** | LUFS over 15 s to 5 min against your target |
-| **Piano roll** | the notes actually played, octave included, on a 3–6 octave keyboard with scrolling history: dedicated two-resolution FFT, peaks accurate to a few cents, harmonics sieved out |
-| **XY oscilloscope** | goniometer or Lissajous drawn in phosphor that fades like a CRT |
-| **Raw data** | the samples as your sound card sees them, in scrolling hex or a bit matrix. Purely experimental |
-| **Waterfall** | one spectrum line per moment, stacked in perspective like receding mountains (“Unknown Pleasures”) |
-| **Hyperspace** | a starfield rushing at you: each frequency spawns its stars, speed follows the volume and jumps on the beat; on extreme passages, speed distortion (space hollows out, colours split) |
-| **Melody** | the dominant note leaves a glowing trail on a note grid, slides included |
-| **Ring** | the spectrum wrapped into a circle that breathes with the bass, turns towards the stereo side, ripples on each beat |
+Real meters, always in view while you produce, mix or practise.
 
-The *Layout* page shows your taskbar in miniature, modules to scale: click one to set its width, drag it
-to reorder or switch sides, or group them all in the middle when your icons are left-aligned. Each module
-can use the global palette, another palette, its own gradient or a solid colour. On launch they run a
-short LED *self-test* before going live. Further down the *Layout* page, every module is sorted into six categories
-(volume, frequencies, stereo, notes, eye candy, raw signal), each with a live preview on what is playing, and the
-*Appearance* page keeps your taskbar live at the top so every colour or effect change shows right away.
+<table>
+  <tr>
+    <td width="50%"><img src="docs/modules/levels.gif" width="100%" alt="Levels and LUFS module"><br><b>Levels + LUFS</b>: L/R peak meter with peak hold and clip, BS.1770 loudness against your target.</td>
+    <td width="50%"><img src="docs/modules/vu.gif" width="100%" alt="VU meter module"><br><b>VU meter</b>: LED arc or analogue needle, ~300 ms ballistics, mono or stereo.</td>
+  </tr>
+  <tr>
+    <td><img src="docs/modules/spectrum.gif" width="100%" alt="Spectrum module"><br><b>Spectrum</b>: relief, bars, LED dots or line, with held peaks and the peak's frequency and note.</td>
+    <td><img src="docs/modules/loudness.gif" width="100%" alt="Loudness history module"><br><b>Loudness history</b>: LUFS over 15 s to 5 min, against your target.</td>
+  </tr>
+  <tr>
+    <td><img src="docs/modules/imager.gif" width="100%" alt="Stereo imager module"><br><b>Stereo imager</b>: where each frequency sits between left and right, with phase correlation.</td>
+    <td><img src="docs/modules/xyscope.gif" width="100%" alt="XY oscilloscope module"><br><b>XY oscilloscope</b>: goniometer or Lissajous in phosphor that fades like a CRT.</td>
+  </tr>
+  <tr>
+    <td><img src="docs/modules/tuner.gif" width="100%" alt="Tuner module"><br><b>Tuner / key</b>: the note and how many cents off, or the song's key on a mini piano (C D E, Do Ré Mi or Camelot).</td>
+    <td><img src="docs/modules/pianoroll.gif" width="100%" alt="Piano roll module"><br><b>Piano roll</b>: the notes actually played, octave included, with harmonics filtered out.</td>
+  </tr>
+</table>
 
-On first launch a 5-step guide lights up the free areas on your real taskbar, lets you pick a look and a
-module pack (Studio, Musician, Minimal, or an empty taskbar to fill yourself), then points at the tray icon.
-Replay it from *Home* or *General*.
+<details>
+<summary><b>One more, for the curious</b></summary>
+<br>
+<img src="docs/modules/rawdata.gif" width="50%" alt="Raw data module"><br>
+<b>Raw data</b>: the samples as your sound card sees them, in scrolling hex or a bit matrix. Purely experimental.
+</details>
 
-![First-run guide](docs/welcome.png)
+## Pick a look
 
-## Key detection that knows when to shut up
+<p align="center">
+  <img src="docs/appearance.png" width="85%" alt="The Appearance page of the settings window: the live taskbar preview on top, then eleven presets.">
+</p>
 
-- **Only sustained music counts.** Peaks must stay put from one block to the next: speech glides, coughs
-  have no stable peaks, notification sounds are too short. Silent Discord call → `--`.
-- **Harmonics are subtracted**, low to high, before anything is shown in the piano roll: a 5th harmonic
-  never becomes a fake major third.
-- **Modal songs get the truth, not a coin flip.** When a track sits on another note than its scale's tonic,
-  the tuner says so: `B♭ MAJ ◆F MIX` = notes of B♭ major, resting on F (Mixolydian).
-- Unsure major/minor shows as `MAJ?` / `MIN?` instead of a confident wrong answer.
-- Checked against a permanent test bench (real samples, full songs referenced on Tunebat/Hooktheory/Beatport,
-  synthetic songs, chords, speech and noise): see [tests/key-bench.csv](tests/key-bench.csv).
+Eleven presets in one click, from *Lab* and *CRT Phosphor* to hardware looks: *VFD*, *LCD*, *Nixie*.
+Then tune it: 16 palettes, your own gradients, colour animation, scanlines, a pixel or smooth font.
+Save a style under a name, or share it as a short `TBV1:…` code.
 
-## Settings
+## Why it feels at home
 
-![Settings window](docs/settings.png)
+- **It finds its place.** Detects the taskbar on its own: top or bottom, compact, any DPI, centred or left-aligned icons. Main screen, a chosen one, or all of them.
+- **It listens to what you choose.** The whole PC, one output, one app only (FL Studio without Discord), or a mic or line input.
+- **The numbers are real.** Loudness follows ITU-R BS.1770. Key detection is checked against a [test bench](tests/key-bench.csv) of real songs, synthetic songs, speech and noise, and shows `--` rather than guessing.
+- **It stays light.** About 4 % of one CPU core at 60 fps, about 0 % in silence. Click-through, so it never gets in the way.
+- **It keeps out of your way.** A global hotkey hides it (Ctrl + Alt + V by default, even in games), and with the installer, updates take one click.
 
-One-click presets (Lab, Ember, CRT Phosphor, Synthwave, Vaporwave, Chrome Y2K, Toxic, RGB,
-and hardware looks: VFD, LCD, Nixie), 16 palettes including RGB, a colour animation for any palette
-(scroll up or down, one colour at a time, back and forth, breathing pulse; 0.2 to 60 s per cycle), custom
-gradients of 2 to 8 colours (global or per module), real colour picker, pixel or smooth font, scanlines,
-per-module options tucked behind *More options*. UI in English, French, Spanish and German (follows Windows).
-
-The window looks like Windows 11 Settings: a side menu (Home, Appearance, Layout, Modules, General), and
-every setting is a card with an icon and a one-line explanation. *Home* shows what is playing, the free
-space on the taskbar, hide / pause buttons, one-click styles and the modules currently shown.
-
-- **My styles**: save the current colours and effects under a name and get them back in one click
-  (Appearance and Home pages); the *⋯* menu updates, renames, copies or deletes a saved style.
-- **Share a style** as a short `TBV1:…` code (paste it on Discord) or a `.tbvstyle` file.
-- **Listen to one app only**: FL Studio without Discord, a game without your music, or a mic/line input.
-- **Global hotkey** (Ctrl + Alt + V by default) hides / shows the visualizers, even in games.
-- **Built-in updates**: checks GitHub releases, one click installs the new version and restarts.
+On first launch, a short guide lights up the free space on your real taskbar and lets you pick a look and a module pack. Interface in English, French, Spanish and German.
 
 ## Download
 
-Grab the latest build on the [Releases](../../releases) page:
+From the [latest release](https://github.com/Myupavision/TaskbarVisu/releases/latest):
 
-- **Installer** `TaskbarVisu-x.y.z-setup.exe`: per-user install (no admin rights), Start menu entry,
-  clean uninstall, in-app updates.
-- **Portable** `TaskbarVisu-x.y.z-portable.zip`: one self-contained `.exe`, nothing to install.
-  The `portable.txt` next to it keeps the settings in a `data` folder beside the exe (USB stick);
-  delete it to use `%APPDATA%\TaskbarVisu` instead.
+- **Installer** `TaskbarVisu-x.y.z-setup.exe`: no admin rights, Start menu entry, clean uninstall, in-app updates.
+- **Portable** `TaskbarVisu-x.y.z-portable.zip`: one `.exe`, nothing to install.
 
-Windows 11 x64, horizontal taskbar. The binaries are not code-signed, so SmartScreen may show
-*Unknown publisher*: click *More info → Run anyway*.
+Windows 11 x64 with a horizontal taskbar. The app is not code-signed yet: if SmartScreen shows *Unknown publisher*, click *More info*, then *Run anyway*.
 
-## Build
+<details>
+<summary><b>Build from source</b></summary>
+<br>
 
-.NET 10 SDK:
+With the .NET 10 SDK:
 
 ```
 dotnet run --project src/TaskbarVisu -c Release
 ```
 
-Full release (self-contained exe, portable zip, Inno Setup 6 installer, SHA-256 sums and winget
-manifests in `build/`, nothing is published):
+Full release build (self-contained exe, portable zip, Inno Setup 6 installer, SHA-256 sums and winget manifests in `build/`; nothing is published):
 
 ```
-powershell -ExecutionPolicy Bypass -File tools/build-release.ps1
+powershell -File tools/build-release.ps1
 ```
 
-Detailed technical documentation (DSP, test bench, diagnostics flags) is in [README.fr.md](README.fr.md) (French).
+How it works (DSP, key detection, test bench, diagnostic flags) is documented in French in [docs/TECHNIQUE.md](docs/TECHNIQUE.md).
+</details>
 
 ## License
 
-[GPL-3.0](LICENSE). Uses [NAudio](https://github.com/naudio/NAudio) (MIT) and
-[SkiaSharp](https://github.com/mono/SkiaSharp) (MIT). Inspired by MiniMeters; not affiliated with it.
+[GPL-3.0](LICENSE). Built with [NAudio](https://github.com/naudio/NAudio) and [SkiaSharp](https://github.com/mono/SkiaSharp) (both MIT). Inspired by MiniMeters; not affiliated with it.
