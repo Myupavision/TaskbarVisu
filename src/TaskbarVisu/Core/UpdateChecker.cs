@@ -15,7 +15,7 @@ internal sealed record UpdateInfo(Version Version, string Tag, string PageUrl, s
 /// </summary>
 internal static class UpdateChecker
 {
-    public const string Repository = "26mataa/TaskbarVisu";
+    public const string Repository = "Myupavision/TaskbarVisu";
     public static string ReleasesPage => $"https://github.com/{Repository}/releases";
 
     public static Version Current { get; } = typeof(UpdateChecker).Assembly.GetName().Version ?? new Version(0, 0);

@@ -15,7 +15,7 @@ $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $PSScriptRoot
 $project = Join-Path $root 'src\TaskbarVisu\TaskbarVisu.csproj'
 $build = Join-Path $root 'build'
-$repo = '26mataa/TaskbarVisu'
+$repo = 'Myupavision/TaskbarVisu'
 
 $version = ([xml](Get-Content $project -Raw)).Project.PropertyGroup.Version | Where-Object { $_ } | Select-Object -First 1
 if (-not $version) { throw "Version introuvable dans $project" }
@@ -96,9 +96,9 @@ $sums = foreach ($f in $files) { '{0}  {1}' -f (Get-FileHash $f -Algorithm SHA25
 Write-Utf8 (Join-Path $build 'SHA256SUMS.txt') (($sums -join "`n") + "`n") $false
 
 if (Test-Path $setup) {
-    $id = '26mataa.TaskbarVisu'
+    $id = 'Myupavision.TaskbarVisu'
     $schema = '1.9.0'
-    $dir = Join-Path $build "winget\manifests\2\26mataa\TaskbarVisu\$version"
+    $dir = Join-Path $build "winget\manifests\m\Myupavision\TaskbarVisu\$version"
     if (Test-Path $dir) { Remove-Item $dir -Recurse -Force }
     New-Item -ItemType Directory $dir -Force | Out-Null
     $hash = (Get-FileHash $setup -Algorithm SHA256).Hash
@@ -140,8 +140,8 @@ ManifestVersion: $schema
 PackageIdentifier: $id
 PackageVersion: $version
 PackageLocale: en-US
-Publisher: 26mataa
-PublisherUrl: https://github.com/26mataa
+Publisher: Myupavision
+PublisherUrl: https://github.com/Myupavision
 PublisherSupportUrl: https://github.com/$repo/issues
 PackageName: TaskbarVisu
 PackageUrl: https://github.com/$repo
@@ -170,7 +170,7 @@ ManifestVersion: $schema
 PackageIdentifier: $id
 PackageVersion: $version
 PackageLocale: fr-FR
-Publisher: 26mataa
+Publisher: Myupavision
 PackageName: TaskbarVisu
 License: GPL-3.0
 ShortDescription: Visualiseurs audio expérimentaux dans la barre des tâches de Windows 11.
@@ -183,5 +183,5 @@ Write-Host ''
 Write-Host 'Terminé :' -ForegroundColor Green
 Get-ChildItem $build -File | Where-Object { $_.Name -like "*$version*" -or $_.Name -eq 'SHA256SUMS.txt' } |
     ForEach-Object { '  {0,-40} {1,8:N1} Mo' -f $_.Name, ($_.Length / 1MB) }
-if (Test-Path $setup) { "  winget : $(Join-Path $build "winget\manifests\2\26mataa\TaskbarVisu\$version")" }
+if (Test-Path $setup) { "  winget : $(Join-Path $build "winget\manifests\m\Myupavision\TaskbarVisu\$version")" }
 Write-Host 'Rien n''a été publié. Après les tests : tag v' -NoNewline; Write-Host $version -NoNewline; Write-Host ', release GitHub avec le zip et le setup, puis soumission winget.'

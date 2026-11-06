@@ -255,7 +255,7 @@ powershell -ExecutionPolicy Bypass -File tools/build-release.ps1
 
 Le script produit dans `build/` l'exe autonome (`portable/`), le zip portable (avec `portable.txt` et
 `LISEZMOI.txt`), l'installeur Inno Setup 6, `SHA256SUMS.txt` et les manifestes winget
-(`winget/manifests/2/26mataa/TaskbarVisu/<version>/`, identifiant `26mataa.TaskbarVisu`). Rien n'est
+(`winget/manifests/m/Myupavision/TaskbarVisu/<version>/`, identifiant `Myupavision.TaskbarVisu`). Rien n'est
 publié : la release GitHub et la soumission winget (pull request sur `microsoft/winget-pkgs`, une fois
 l'installeur en ligne à l'adresse du manifeste) se font à la main. L'installeur accepte `/RELAUNCH=1`
 (utilisé par la mise à jour intégrée) pour relancer TaskbarVisu après une installation silencieuse.
